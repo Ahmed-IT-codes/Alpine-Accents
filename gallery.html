@@ -1,0 +1,535 @@
+
+
+</body>
+</html> 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery | Alpine Ascents</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .gallery-page { padding: 50px 0 80px; }
+    .gallery-heading { text-align:center; margin-bottom:35px; }
+    .gallery-heading .eyebrow { color:#FFD700; letter-spacing:4px; font-size:12px; }
+    .gallery-heading h1 { font-size:clamp(32px,5vw,56px); margin:12px 0; }
+    .gallery-heading p { color:#B8C0B8; max-width:650px; margin:auto; }
+    .gallery-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; margin:35px 0 55px; }
+    .gallery-stat { padding:22px 10px; text-align:center; border:1px solid rgba(255,215,0,.2); border-radius:14px; background:rgba(255,255,255,.025); }
+    .gallery-stat strong { display:block; color:#FFD700; font-size:30px; }
+    .gallery-stat span { color:#B8C0B8; font-size:13px; }
+    .gallery-subheading { margin:35px 0 20px; }
+    .gallery-subheading h2 { font-size:clamp(25px,4vw,36px); }
+    .gallery-subheading p { color:#B8C0B8; }
+    .landscape-grid, #galleryGrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+    .landscape-card, .photo-card { min-width:0; overflow:hidden; border:1px solid rgba(255,215,0,.18); border-radius:15px; background:#10211B; transition:transform .25s,border-color .25s; }
+    .landscape-card:hover, .photo-card:hover { transform:translateY(-5px); border-color:#FFD700; }
+    .landscape-card { cursor:pointer; }
+    .landscape-card img, .photo-card img { display:block; width:100%; height:220px; object-fit:cover; }
+    .landscape-info, .photo-info { padding:16px; }
+    .landscape-info h3, .photo-info h3 { font-size:19px; margin-bottom:8px; }
+    .landscape-info p, .photo-info p { color:#B8C0B8; font-size:14px; margin-bottom:12px; }
+    .gallery-tag { color:#FFD700; font-size:11px; letter-spacing:2px; }
+    .gallery-action { background:transparent; border:1px solid #FFD700; color:#FFD700; padding:9px 14px; border-radius:7px; cursor:pointer; }
+    .gallery-action:hover { background:#FFD700; color:#050E0B; }
+    .photo-card { cursor:pointer; }
+    .photo-card img { height:235px; }
+    .gallery-detail { display:none; margin:25px 0; padding:25px; border:1px solid rgba(255,215,0,.3); border-radius:15px; background:#10211B; }
+    .gallery-detail.active { display:block; }
+    .gallery-detail h3 { color:#FFD700; }
+    .gallery-detail p, .gallery-detail li { color:#D0D6D0; line-height:1.8; }
+    .gallery-detail img { width:100%; max-height:380px; object-fit:cover; border-radius:12px; margin-bottom:20px; }
+    .gallery-toolbar { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; }
+    .gallery-toolbar input, .gallery-toolbar select { max-width:100%; padding:11px 13px; border-radius:8px; border:1px solid rgba(255,215,0,.35); background:#10211B; color:#FFFDF5; }
+    .gallery-toolbar input { flex:1; min-width:190px; }
+    .gallery-toolbar select { min-width:170px; }
+    .gallery-empty { grid-column:1/-1; color:#B8C0B8; padding:30px; text-align:center; }
+    .gallery-modal { display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,.94); align-items:center; justify-content:center; padding:20px; overflow-y:auto; }
+    .gallery-modal.active { display:flex; }
+    .gallery-modal-content { width:min(1050px,100%); max-height:90vh; overflow-y:auto; text-align:left; color:#FFFDF5; border:1px solid rgba(255,215,0,.28); border-radius:16px; background:#050E0B; padding:22px; }
+    .gallery-modal-content img { display:block; width:100%; max-height:45vh; object-fit:cover; border-radius:10px; }
+    .photo-detail-title { color:#FFD700; font-size:clamp(24px,4vw,36px); margin:18px 0 8px; }
+    .photo-detail-description { color:#D0D6D0; line-height:1.8; }
+    .photo-detail-meta { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:16px 0; }
+    .photo-detail-meta div { background:#10211B; border:1px solid rgba(255,215,0,.2); border-radius:9px; padding:12px; }
+    .photo-detail-meta strong { display:block; color:#FFD700; font-size:12px; letter-spacing:1px; margin-bottom:5px; }
+    .photo-detail-meta span { color:#FFFDF5; font-size:14px; }
+    .photo-detail-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    .gallery-close { position:fixed; top:12px; right:22px; border:0; background:#10211B; color:white; font-size:32px; line-height:1; width:44px; height:44px; border-radius:50%; cursor:pointer; z-index:100001; }
+    @media(max-width:560px) { .gallery-modal { padding:10px; align-items:flex-start; } .gallery-modal-content { padding:14px; margin-top:48px; max-height:calc(100vh - 65px); } .photo-detail-meta { grid-template-columns:1fr; } }
+    @media(max-width:850px) { .landscape-grid,#galleryGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media(max-width:560px) { .gallery-page { padding-top:30px; } .gallery-stats { gap:8px; } .gallery-stat { padding:15px 5px; } .gallery-stat strong { font-size:23px; } .gallery-stat span { font-size:11px; } .landscape-grid,#galleryGrid { grid-template-columns:1fr; } .landscape-card img,.photo-card img { height:240px; } }
+    /* Fix Gallery Header While Scrolling */
+header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 99999 !important;
+    width: 100%;
+}
+
+.topline {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100000 !important;
+}
+
+header {
+    top: 32px !important;
+}
+.gallery-page .gallery-heading {
+    position: static !important;
+    top: auto !important;
+    transform: none !important;
+}
+  </style>
+</head>
+
+<body>
+ <div class="topline"><span>⛰ <b>ALPINE ASCENTS</b> &nbsp; | &nbsp; Your next summit starts here</span><span>VISITORS
+            <b id="visitorCount">1,248</b></span></div>
+    <header>
+        <div class="navwrap"><a class="brand" href="index.html"><span
+                    class="brand-icon">▲</span><span>ALPINE<br><small>ASCENTS</small></span></a><button
+                class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">☰</button>
+            <nav id="mainNav"><a href="index.html" class="active ">Home</a><a href="about.html"
+                    class=" ">Mountaineering</a><a href="packages.html" class=" ">Packages</a><a href="safety.html"
+                    class=" ">Safety</a><a href="records.html" class=" ">Records</a><a href="clubs.html"
+                    class=" ">Locations</a><a href="gallery.html" class=" ">Gallery</a><a href="news.html"
+                    class=" ">Updates</a><a href="booking.html" class=" nav-cta">Book Now</a></nav>
+        </div>
+    </header>
+<main class="wrap gallery-page">
+
+  <header class="gallery-heading">
+    <div class="eyebrow">EXPLORE THE WILD</div>
+    <h1>Mountain Moments</h1>
+    <p>Discover breathtaking mountain photography, explore six unique landscape environments, and learn about the world's spectacular natural scenery.</p>
+  </header>
+
+  <section class="gallery-stats" aria-label="Gallery statistics">
+    <div class="gallery-stat"><strong>30</strong><span>Mountain Photos</span></div>
+    <div class="gallery-stat"><strong>06</strong><span>Landscape Themes</span></div>
+    <div class="gallery-stat"><strong>∞</strong><span>Reasons to Explore</span></div>
+  </section>
+
+  <section>
+    <div class="gallery-subheading">
+      <div class="gallery-tag">01 / LANDSCAPE COLLECTION</div>
+      <h2>Explore Six Landscapes</h2>
+      <p>Click any landscape to discover its features, environment, and mountaineering importance.</p>
+    </div>
+
+    <div class="landscape-grid" id="landscapeGrid"></div>
+    <div class="gallery-detail" id="landscapeDetail" aria-live="polite"></div>
+  </section>
+
+  <section>
+    <div class="gallery-subheading">
+      <div class="gallery-tag">02 / MOUNTAIN WORLD</div>
+      <h2>Mountain Photography</h2>
+      <p>Explore all 30 photographs. Click any photograph to read destination information, see sample trip details, and use the booking or cart options.</p>
+    </div>
+
+    <div class="gallery-toolbar">
+      <input id="gallerySearch" type="search" placeholder="Search mountain photographs..." aria-label="Search photographs">
+      <select id="landscapeFilter" aria-label="Filter photographs by landscape">
+        <option value="all">All Landscapes</option>
+        <option value="snow">Snow Mountains</option>
+        <option value="peaks">Mountain Peaks</option>
+        <option value="valleys">Valleys & Lakes</option>
+        <option value="forests">Forests</option>
+        <option value="sunrise">Sunrise & Sunset</option>
+        <option value="rocky">Rocky Landscapes</option>
+      </select>
+    </div>
+
+    <div id="galleryGrid"></div>
+    <p id="galleryCount" class="mt-3" style="color:#B8C0B8;"></p>
+  </section>
+
+</main>
+
+<div class="gallery-modal" id="photoModal" role="dialog" aria-modal="true" aria-label="Large photograph viewer">
+  <button class="gallery-close" id="closePhoto" aria-label="Close photograph">&times;</button>
+  <div class="gallery-modal-content">
+    <img id="modalImage" src="" alt="">
+    <div id="modalCaption"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+const landscapes = [
+  {
+    id: "snow",
+    name: "Snow Mountains",
+    image: "photo-1519681393784-d120267933ba",
+    short: "Snow-covered summits, glaciers and challenging alpine environments.",
+    description: `Snow mountains are among the most striking landscapes on Earth. They occur in high-altitude regions and cold climates where snowfall accumulates on mountain slopes and summits. Some mountains remain snow-covered throughout the year, while others experience seasonal snow. Snow, ice, glaciers, steep slopes and changing weather make these environments particularly important in mountaineering. Famous snow-covered ranges include the Himalayas, Karakoram, Alps and Andes.
+
+Snow mountain landscapes are shaped by snowfall, wind, freezing temperatures and glacial movement. Over long periods, glaciers can carve valleys, transport rocks and reshape the surrounding terrain. These processes create distinctive features such as ice fields, ridges, snow bowls and glacial valleys.`,
+    features: [
+      "Permanent or seasonal snow cover",
+      "Glaciers, ice fields and frozen slopes",
+      "Low temperatures and strong mountain winds",
+      "High-altitude terrain with reduced oxygen",
+      "Spectacular winter scenery and panoramic views"
+    ],
+    importance: `Snow mountains are important sources of freshwater because snow and glacial ice feed rivers that support communities, agriculture and ecosystems. They also attract climbers, trekkers, photographers and researchers. Mountain tourism can support local economies when it is managed responsibly.`,
+    safety: `Climbers should study the route and weather forecast, carry appropriate insulated clothing, suitable boots and navigation equipment, and travel with trained guides when needed. Avalanche-prone terrain requires specialist training and current local information. Climbers should recognise altitude-related symptoms, avoid continuing when conditions become unsafe, and follow local mountain rescue guidance.`,
+    environment: `Visitors should carry their rubbish back, avoid contaminating snow and water sources, respect protected areas and use established campsites where possible. Snow and ice environments are sensitive to climate change, which can affect glaciers, water supplies and mountain ecosystems.`
+  },
+  {
+    id: "peaks",
+    name: "Mountain Peaks",
+    image: "photo-1464822759023-fed622ff2c3b",
+    short: "Towering summits, sharp ridges and high-altitude panoramas.",
+    description: `A mountain peak is a high point on a mountain or mountain range. Peaks vary in elevation, shape, geology and climbing difficulty. Some have rounded summits shaped by weathering, while others have sharp ridges and steep rock faces. Their appearance depends on geological uplift, erosion, glaciation and the surrounding climate.
+
+Mountaineers may climb peaks for adventure, scientific exploration, personal achievement or to experience remote natural environments. A peak's height alone does not determine its difficulty. Route length, steepness, rock quality, snow conditions, exposure and weather all influence the challenge.`,
+    features: [
+      "Summits, ridgelines and steep slopes",
+      "Different geological formations and rock types",
+      "Wide views of surrounding mountain ranges",
+      "Routes ranging from walking trails to technical climbs",
+      "Weather and altitude that can change climbing conditions"
+    ],
+    importance: `Mountain peaks influence local weather, provide habitats for specialised plants and animals, and form important landmarks for navigation and cultural traditions. Many peaks are also popular destinations for trekking and mountaineering, bringing visitors to mountain communities.`,
+    safety: `Before attempting a summit, climbers should check the route grade, distance, elevation gain, forecast and expected return time. They should carry sufficient water, food, layers, navigation tools and emergency supplies. Technical routes may require ropes, helmets, harnesses and appropriate training. A team should turn back if conditions deteriorate or progress becomes too slow.`,
+    environment: `Summit areas can be fragile and exposed. Visitors should stay on established routes where possible, avoid damaging vegetation, respect cultural or sacred sites and pack out all rubbish. Responsible climbing helps preserve these environments for future visitors.`
+  },
+  {
+    id: "valleys",
+    name: "Valleys & Lakes",
+    image: "photo-1470770841072-f978cf4d019e",
+    short: "Mountain rivers, alpine lakes, green meadows and dramatic valleys.",
+    description: `A mountain valley is a low area between hills or mountains, often formed or modified by rivers and glaciers. River valleys commonly have V-shaped profiles, while glaciers can create broad U-shaped valleys. Alpine lakes may form when glacial activity leaves depressions or when water collects behind natural barriers.
+
+Valleys often provide access to mountain trails, villages, forests and base camps. Their lower elevations may have milder temperatures than nearby summits, making them important places for agriculture, wildlife habitats and outdoor recreation.`,
+    features: [
+      "Rivers, streams, waterfalls and alpine lakes",
+      "Meadows, forests and mountain villages",
+      "V-shaped river valleys and U-shaped glacial valleys",
+      "Habitats for birds, mammals and aquatic life",
+      "Common starting points for trekking and climbing routes"
+    ],
+    importance: `Mountain valleys support biodiversity, tourism, farming and freshwater systems. Rivers originating in mountain areas can supply water to communities far downstream. Lakes and wetlands also provide habitats and can help regulate local water cycles.`,
+    safety: `Trekkers should check river levels and local weather, because heavy rain or melting snow can rapidly raise water levels. They should avoid crossing fast-flowing rivers without a safe, established crossing. Camping should take place away from flood channels, unstable slopes and other natural hazards. Carry a map and inform someone of the planned route.`,
+    environment: `Keep soap, fuel, rubbish and other pollutants away from lakes and streams. Do not disturb wildlife or remove plants and rocks from protected areas. Use established trails and campsites where available. Respect local residents and follow rules designed to protect drinking-water sources and sensitive habitats.`
+  },
+  {
+    id: "forests",
+    name: "Mountain Forests",
+    image: "photo-1441974231531-c6227db76b6e",
+    short: "Evergreen woodlands, biodiversity and peaceful mountain trails.",
+    description: `Mountain forests grow on slopes and in valleys where temperature, rainfall, soil and elevation allow trees to survive. Their composition changes with altitude: lower slopes may support broadleaf forests, while cooler higher elevations may contain conifers or other cold-adapted vegetation. Above the tree line, conditions may become too harsh for continuous tree growth.
+
+These forests form complex ecosystems containing trees, shrubs, fungi, insects, birds and mammals. They provide shade, store carbon, help retain soil and influence the movement of water through mountain landscapes.`,
+    features: [
+      "Evergreen and broadleaf trees, depending on the region",
+      "Wildlife habitats and rich biodiversity",
+      "Roots that help stabilise soil on slopes",
+      "Shaded paths and natural trekking routes",
+      "Important roles in carbon storage and water regulation"
+    ],
+    importance: `Mountain forests reduce soil erosion, support biodiversity and help protect watersheds. They can also provide sustainable livelihoods through carefully managed tourism and forest products. Healthy forests are important for the resilience of mountain communities and downstream environments.`,
+    safety: `Walk on marked trails where possible and carry a map, water and weather-appropriate clothing. Conditions can be slippery after rain, and visibility may change quickly. Check local advice about wildlife, falling branches and trail closures. Do not light fires unless expressly permitted in a designated safe area.`,
+    environment: `Never leave rubbish behind, feed wild animals or damage trees. Follow fire restrictions and respect conservation areas. Use reusable containers and established paths to reduce environmental impact. Visitors should avoid disturbing nesting wildlife and should leave natural features as they found them.`
+  },
+  {
+    id: "sunrise",
+    name: "Sunrise & Sunset",
+    image: "photo-1500530855697-b586d89ba3ee",
+    short: "Golden mountain light, colourful skies and dramatic silhouettes.",
+    description: `Sunrise and sunset create some of the most memorable views in mountain landscapes. When the Sun is low on the horizon, its light travels through more of the atmosphere, often producing warm colours and long shadows. Peaks can appear golden, pink, orange or dark against the sky, depending on cloud cover, dust, moisture and the direction of the light.
+
+Photographers often use these periods to capture silhouettes, ridgelines, snow textures and reflections. Trekkers may also start early to make the most of daylight, but early starts require planning, appropriate clothing and an understanding of the route.`,
+    features: [
+      "Warm colours and changing light on mountain slopes",
+      "Long shadows that reveal terrain and texture",
+      "Silhouettes of peaks and ridges",
+      "Photographic opportunities during the golden hour",
+      "Lower temperatures and reduced visibility around dusk"
+    ],
+    importance: `Mountain sunrises and sunsets are important for landscape photography and nature appreciation. They can encourage visitors to explore mountain environments and learn about weather, light and geography. The experience is best when visitors choose safe viewpoints and avoid disturbing wildlife or local communities.`,
+    safety: `Plan the entire journey before setting out, including the return route. Carry a headlamp or torch, spare batteries, warm layers and navigation equipment. Do not approach exposed cliff edges in low light for a photograph. Cloud, fog and darkness can make familiar paths difficult to follow, so turn back early when necessary.`,
+    environment: `Stay on durable paths and avoid trampling fragile plants to reach a viewpoint. Keep noise low, take rubbish away and respect other visitors. Do not use drones where they are prohibited or where they may disturb wildlife. Choose established viewpoints rather than creating new tracks across sensitive slopes.`
+  },
+  {
+    id: "rocky",
+    name: "Rocky Landscapes",
+    image: "photo-1464278533981-50106e6176b1",
+    short: "Rugged cliffs, exposed ridges, rock formations and climbing terrain.",
+    description: `Rocky mountain landscapes feature exposed bedrock, cliffs, boulders, ridges and steep slopes. Their forms are influenced by the type of rock, geological structure, weathering, erosion and glacial action. Some rock faces are solid and suitable for established climbing routes, while other areas contain loose stones or unstable surfaces.
+
+Rocky terrain is used for hiking, scrambling, bouldering and technical rock climbing. Each activity has different equipment and skill requirements. A route that appears short on a map can still be difficult because of steepness, exposure or the need to move carefully over uneven ground.`,
+    features: [
+      "Exposed rock faces, cliffs and ridges",
+      "Boulders, scree slopes and uneven surfaces",
+      "Routes with varying technical difficulty",
+      "Geological formations shaped over long periods",
+      "Potential rockfall and unstable terrain"
+    ],
+    importance: `Rocky landscapes help geologists understand Earth's history and the processes that shape mountain ranges. They also provide opportunities for climbing, outdoor education and adventure tourism. Responsible access can support local economies while protecting geological and ecological features.`,
+    safety: `Use footwear appropriate to the terrain and check route conditions before starting. Loose rocks can injure people below, so avoid dislodging stones and maintain safe spacing. Technical climbing requires suitable equipment, training and partner checks. Avoid climbing during thunderstorms or when wet rock makes the route unsafe, and follow local closures and guide advice.`,
+    environment: `Do not damage rock formations, remove geological specimens from protected areas or leave climbing equipment and rubbish behind. Follow local climbing access rules, avoid disturbing nesting birds and use established routes. Respect restrictions intended to protect both wildlife and the natural landscape.`
+  }
+];
+
+  const photos = [
+    {title:"Mountain Panorama", image:"photo-1464822759023-fed622ff2c3b", category:"peaks"},
+    {title:"Snowy Summit", image:"photo-1519681393784-d120267933ba", category:"snow"},
+    {title:"Alpine Lake", image:"photo-1470770841072-f978cf4d019e", category:"valleys"},
+    {title:"Mountain Forest", image:"photo-1441974231531-c6227db76b6e", category:"forests"},
+    {title:"Golden Landscape", image:"photo-1500530855697-b586d89ba3ee", category:"sunrise"},
+    {title:"Rugged Peaks", image:"photo-1464278533981-50106e6176b1", category:"rocky"},
+    {title:"High Mountain Range", image:"photo-1454496522488-7a8e488e8606", category:"peaks"},
+    {title:"Winter Wilderness", image:"photo-1457269449834-928af64c684d", category:"snow"},
+    {title:"Quiet Valley", image:"photo-1433086966358-54859d0ed716", category:"valleys"},
+    {title:"Forest Wilderness", image:"photo-1472396961693-142e6e269027", category:"forests"},
+    {title:"Mountain Dawn", image:"photo-1470252649378-9c29740c9fa8", category:"sunrise"},
+    {title:"Rocky Mountain Ridge", image:"photo-1464278533981-50106e6176b1", category:"rocky"},
+    {title:"Distant Snow Peaks", image:"photo-1464822759023-fed622ff2c3b", category:"snow"},
+    {title:"Alpine Heights", image:"photo-1454496522488-7a8e488e8606", category:"peaks"},
+    {title:"Mountain Reflection", image:"photo-1470770841072-f978cf4d019e", category:"valleys"},
+    {title:"Evergreen Trail", image:"photo-1441974231531-c6227db76b6e", category:"forests"},
+    {title:"Sunset Horizon", image:"photo-1500530855697-b586d89ba3ee", category:"sunrise"},
+    {title:"Stone Peaks", image:"photo-1464278533981-50106e6176b1", category:"rocky"},
+    {title:"Glacier Country", image:"photo-1519681393784-d120267933ba", category:"snow"},
+    {title:"Towering Mountains", image:"photo-1454496522488-7a8e488e8606", category:"peaks"},
+    {title:"Riverside Valley", image:"photo-1433086966358-54859d0ed716", category:"valleys"},
+    {title:"Deep Green Forest", image:"photo-1472396961693-142e6e269027", category:"forests"},
+    {title:"Morning Mountain Light", image:"photo-1470252649378-9c29740c9fa8", category:"sunrise"},
+    {title:"Rugged Wilderness", image:"photo-1464278533981-50106e6176b1", category:"rocky"},
+    {title:"Frozen Alpine View", image:"photo-1457269449834-928af64c684d", category:"snow"},
+    {title:"Mountain Skyline", image:"photo-1464822759023-fed622ff2c3b", category:"peaks"},
+    {title:"Lake Between Mountains", image:"photo-1470770841072-f978cf4d019e", category:"valleys"},
+    {title:"Woodland Escape", image:"photo-1441974231531-c6227db76b6e", category:"forests"},
+    {title:"Last Light on the Peaks", image:"photo-1500530855697-b586d89ba3ee", category:"sunrise"},
+    {title:"Rock Face Adventure", image:"photo-1464278533981-50106e6176b1", category:"rocky"}
+  ];
+
+  const landscapeGrid = document.getElementById("landscapeGrid");
+  const galleryGrid = document.getElementById("galleryGrid");
+  const detail = document.getElementById("landscapeDetail");
+  const search = document.getElementById("gallerySearch");
+  const filter = document.getElementById("landscapeFilter");
+  const count = document.getElementById("galleryCount");
+  const modal = document.getElementById("photoModal");
+  const modalImage = document.getElementById("modalImage");
+  const modalCaption = document.getElementById("modalCaption");
+
+  function imageUrl(id, width) {
+    return "https://images.unsplash.com/" + id +
+      "?auto=format&fit=crop&w=" + (width || 800) + "&q=80";
+  }
+
+  landscapes.forEach(function (landscape) {
+    const card = document.createElement("article");
+    card.className = "landscape-card";
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", "Explore " + landscape.name);
+    card.innerHTML =
+      '<img src="' + imageUrl(landscape.image, 700) + '" alt="' + landscape.name + '" loading="lazy">' +
+      '<div class="landscape-info">' +
+        '<div class="gallery-tag">LANDSCAPE THEME</div>' +
+        '<h3>' + landscape.name + '</h3>' +
+        '<p>' + landscape.short + '</p>' +
+        '<button type="button" class="gallery-action">Explore Details <i class="fa-solid fa-arrow-right"></i></button>' +
+      '</div>';
+
+    function openDetails() {
+      detail.innerHTML =
+        '<img src="' + imageUrl(landscape.image, 1200) + '" alt="' + landscape.name + '">' +
+        '<div class="gallery-tag">LANDSCAPE DETAILS</div>' +
+        '<h3>' + landscape.name + '</h3>' +
+        '<p>' + landscape.description + '</p>' +
+        '<h5>Key Features</h5>' +
+        '<ul>' + landscape.features.map(function (feature) {
+          return '<li>' + feature + '</li>';
+        }).join("") + '</ul>' +
+        '<h5>Mountaineering & Safety</h5>' +
+        '<p>' + landscape.importance + '</p>' +
+        '<button class="gallery-action" id="closeLandscapeDetail" type="button">Close Details</button>';
+
+      detail.classList.add("active");
+      document.getElementById("closeLandscapeDetail").addEventListener("click", function () {
+        detail.classList.remove("active");
+      });
+      detail.scrollIntoView({behavior:"smooth", block:"start"});
+    }
+
+    card.addEventListener("click", openDetails);
+    card.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openDetails();
+      }
+    });
+    landscapeGrid.appendChild(card);
+  });
+
+  function showPhotos() {
+    const term = search.value.trim().toLowerCase();
+    const category = filter.value;
+    const filtered = photos.filter(function (photo) {
+      return (category === "all" || photo.category === category) &&
+        (photo.title.toLowerCase().includes(term) ||
+         photo.category.toLowerCase().includes(term));
+    });
+
+    galleryGrid.innerHTML = "";
+
+    if (!filtered.length) {
+      galleryGrid.innerHTML = '<p class="gallery-empty">No photographs match your search. Try another keyword.</p>';
+      count.textContent = "0 photographs found";
+      return;
+    }
+
+    filtered.forEach(function (photo) {
+      const card = document.createElement("article");
+      card.className = "photo-card";
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", "View " + photo.title);
+
+      const img = document.createElement("img");
+      img.src = imageUrl(photo.image, 700);
+      img.alt = photo.title;
+      img.loading = "lazy";
+
+      const info = document.createElement("div");
+      info.className = "photo-info";
+      info.innerHTML =
+        '<div class="gallery-tag">' + photo.category.toUpperCase() + '</div>' +
+        '<h3>' + String(photos.indexOf(photo) + 1).padStart(2, "0") + ' / ' + photo.title + '</h3>' +
+        '<p>Explore this mountain landscape in a larger view.</p>' +
+        '<span class="gallery-tag"><i class="fa-solid fa-magnifying-glass-plus"></i> VIEW PHOTO</span>';
+
+      function openPhoto() {
+        const tripInfo = {
+          snow: {
+            location: "Himalayan / Karakoram snow regions (sample destination)",
+            duration: "3–5 days (sample itinerary)",
+            difficulty: "Moderate to Challenging",
+            price: "PKR 45,000 per person (sample price)",
+            description: "Explore dramatic snow-covered slopes, glacial scenery and high mountain viewpoints. A real trip plan should be confirmed with local guides according to the selected mountain, season, weather and current route conditions."
+          },
+          peaks: {
+            location: "Northern Pakistan mountain ranges (sample destination)",
+            duration: "2–4 days (sample itinerary)",
+            difficulty: "Moderate to Challenging",
+            price: "PKR 35,000 per person (sample price)",
+            description: "Discover towering summits, ridgelines and panoramic mountain views. The actual route, altitude, transport and guide arrangements depend on the selected peak and the group's experience."
+          },
+          valleys: {
+            location: "Hunza / Skardu valley region (sample destination)",
+            duration: "3 days (sample itinerary)",
+            difficulty: "Easy to Moderate",
+            price: "PKR 28,000 per person (sample price)",
+            description: "Enjoy mountain lakes, rivers, meadows and scenic valley walks. This sample trip is intended for sightseeing and trekking rather than technical climbing; confirm the exact destination and inclusions before booking."
+          },
+          forests: {
+            location: "Northern Pakistan forest trails (sample destination)",
+            duration: "1–2 days (sample itinerary)",
+            difficulty: "Easy to Moderate",
+            price: "PKR 18,000 per person (sample price)",
+            description: "Walk through peaceful woodland trails, observe mountain ecosystems and enjoy nature photography. Trail access and conditions vary by season, so check local advice before travelling."
+          },
+          sunrise: {
+            location: "A designated mountain viewpoint (sample destination)",
+            duration: "1 day (sample itinerary)",
+            difficulty: "Easy to Moderate",
+            price: "PKR 12,000 per person (sample price)",
+            description: "Experience golden-hour mountain views and photography at a planned viewpoint. The group should travel with a clear route plan, suitable warm layers and a torch for low-light conditions."
+          },
+          rocky: {
+            location: "Rocky trails in the northern mountain region (sample destination)",
+            duration: "2 days (sample itinerary)",
+            difficulty: "Moderate; technical climbing requires training",
+            price: "PKR 24,000 per person (sample price)",
+            description: "Explore rugged ridges, exposed rock formations and dramatic terrain. This sample package is for guided trekking; technical rock climbing is not included unless separately arranged with qualified professionals."
+          }
+        };
+        const trip = tripInfo[photo.category] || tripInfo.peaks;
+        const tripId = "trip-" + (photos.indexOf(photo) + 1);
+        modalImage.src = imageUrl(photo.image, 1600);
+        modalImage.alt = photo.title;
+        modalCaption.innerHTML =
+          '<div class="gallery-tag">' + photo.category.toUpperCase() + ' / DESTINATION GUIDE</div>' +
+          '<h2 class="photo-detail-title">' + photo.title + '</h2>' +
+          '<p class="photo-detail-description">' + trip.description + '</p>' +
+          '<div class="photo-detail-meta">' +
+            '<div><strong>LOCATION</strong><span>' + trip.location + '</span></div>' +
+            '<div><strong>DURATION</strong><span>' + trip.duration + '</span></div>' +
+            '<div><strong>DIFFICULTY</strong><span>' + trip.difficulty + '</span></div>' +
+          '</div>' +
+          '<div class="photo-detail-meta" style="grid-template-columns:1fr">' +
+            '<div><strong>PACKAGE PRICE</strong><span>' + trip.price + '</span></div>' +
+          '</div>' +
+          '<p class="photo-detail-description"><strong>Sample package may include:</strong> guided planning, basic itinerary support and destination information. Transport, accommodation, meals, permits and equipment must be confirmed before payment.</p>' +
+          '<div class="photo-detail-actions">' +
+            '<a class="gallery-action" style="text-decoration:none" href="booking.html?trip=' + encodeURIComponent(photo.title) + '">Book This Trip <i class="fa-solid fa-arrow-right"></i></a>' +
+            '<button type="button" class="gallery-action" id="addPhotoToCart"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>' +
+          '</div>' +
+          '<p class="photo-detail-description" style="font-size:12px;margin-top:14px">Note: Duration and prices are sample/demo values for this student project, not verified live offers. Confirm actual trip details before making a real booking.</p>';
+        modal.classList.add("active");
+        document.body.style.overflow = "hidden";
+        document.getElementById("closePhoto").focus();
+        document.getElementById("addPhotoToCart").addEventListener("click", function () {
+          let cart = [];
+          try { cart = JSON.parse(localStorage.getItem("cart") || "[]"); } catch (error) { cart = []; }
+          cart.push({ id: tripId, title: photo.title, category: photo.category, price: trip.price, image: imageUrl(photo.image, 500) });
+          localStorage.setItem("cart", JSON.stringify(cart));
+          this.innerHTML = '<i class="fa-solid fa-check"></i> Added to Cart';
+          this.setAttribute("aria-label", photo.title + " added to cart");
+        });
+      }
+
+      card.appendChild(img);
+      card.appendChild(info);
+      card.addEventListener("click", openPhoto);
+      card.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openPhoto();
+        }
+      });
+      galleryGrid.appendChild(card);
+    });
+
+    count.textContent = "Showing " + filtered.length + " of " + photos.length + " photographs";
+  }
+
+  search.addEventListener("input", showPhotos);
+  filter.addEventListener("change", showPhotos);
+
+  function closePhoto() {
+    modal.classList.remove("active");
+    modalImage.src = "";
+    document.body.style.overflow = "";
+  }
+
+  document.getElementById("closePhoto").addEventListener("click", closePhoto);
+  modal.addEventListener("click", function (event) {
+    if (event.target === modal) closePhoto();
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") closePhoto();
+  });
+
+  showPhotos();
+})();
+</script>
+
+</body>
+</html>
